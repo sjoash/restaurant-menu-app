@@ -22,6 +22,7 @@ const account1 = {
 },
 ],
   pin: 1111,
+  locale: 'en-GB',
 };
 
 const account2 = {
@@ -47,6 +48,7 @@ const account2 = {
   price: 26000
 }],
   pin: 2222,
+  locale: 'en-US',
 };
 
 const account3 = {
@@ -71,6 +73,7 @@ const account3 = {
   price: 8000
 }],
   pin: 3333,
+  locale: 'en-GB',
 };
 
 const account4 = {
@@ -93,6 +96,7 @@ const account4 = {
   price: 10000
 }],
   pin: 4444,
+  locale: 'en-US',
 };
 
 const accounts = [account1, account2, account3, account4];
@@ -124,25 +128,38 @@ const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
 // Display
-const displayChoices = function(choices){
+const formatCur = function(value,locale){
+  return new Intl.NumberFormat(locale,{
+    style: 'currency',
+    currency: 'UGX',
+
+  }).format(value);
+
+}
+
+const displayChoices = function(acc){
   containerMovements.innerHTML = '';
 
-    choices.forEach(function(choice, i){
+    acc.choices.forEach(function(choice, i){
+
+      const formattedPrice = formatCur(choice.price,acc.locale);
+     
+      
         const html = `
         <div class="movements__row">
           <div class="movements__type movements__type--deposit">${i+1}<img class="chicken" src="${choice.image}"/></div>
          <div class="movements__date">${choice.name}</div>
-         <div class="movements__value">${choice.price}</div>
+         <div class="movements__value">${formattedPrice}</div>
         </div>`;
         containerMovements.insertAdjacentHTML('afterbegin',html);
         
     });
 
 };
-displayChoices(account1.choices);
-const calcDisplayTotal = function(choices){
-  const total = choices.reduce((acc, choice) => acc + choice.price, 0);
-  labelBalance.textContent = `${total}`;
+
+const calcDisplayTotal = function(acc){
+  const total = acc.choices.reduce((acc, choice) => acc + choice.price, 0);
+  labelBalance.textContent = formatCur(total,acc.locale);;
 };
 
 
@@ -155,24 +172,77 @@ const createUsernames = function(accs){
   
 createUsernames(accounts);
 const updateUI = function(acc){
-  displayChoices(acc.choices);
-  calcDisplayTotal(acc.choices);
+  displayChoices(acc);
+  calcDisplayTotal(acc);
 }
 
-let currentAccount;
+const startLogOutTimer =function(){
+  const tick = function(){
+    const min = String(Math.trunc(time/60)).padStart(2,0);
+    const sec = String(time % 60).padStart(2, 0);
+
+    labelTimer.textContent = `${min}:${sec}`;
+
+    
+
+    if(time === 0){
+      clearInterval(timer);
+      labelWelcome.textContent = 'Log in to get started';
+      containerApp.style.opacity = 0;
+    }
+
+    time--;
+  };
+  let time = 30;
+
+
+  tick();
+
+  const timer = setInterval(tick, 1000);
+  return timer;
+};
+
+
+let currentAccount, timer;
+
+
+// const day = `${now.getDate()}`.padStart(2, 0);
+// const month = `${now.getMonth() + 1}`.padStart(2, 0);
+// const year = now.getFullYear();
+// const hour = now.getHours();
+// const min = now.getMinutes();
+// labelDate.textContent = `${day}/${month}/${year}, ${hour}:${min}`
+
 btnLogin.addEventListener('click', function(e){
   e.preventDefault();
 
   currentAccount = accounts.find(acc => acc.username === inputLoginUsername.value);
-  console.log(currentAccount);
+
 
 if(currentAccount?.pin === Number(inputLoginPin.value)) {
   labelWelcome.textContent = `Welcome back, ${currentAccount.owner.split(' ')[0]}`;
   containerApp.style.opacity = 100;
 
+  const now = new Date();
+  const options = {
+  hour: "numeric",
+  minute: "numeric",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  // weekday: "long",
+ }
+// const locale = navigator.language;
+// console.log(locale);
+
+labelDate.textContent = new Intl.DateTimeFormat(currentAccount.locale, options).format(now);
+
+
   // clear input fields
   inputLoginUsername.value = inputLoginPin.value = '';
   inputLoginPin.blur();
+timer = startLogOutTimer();
+  
   // Display Choices
  updateUI(currentAccount);
 }
