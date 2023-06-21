@@ -241,7 +241,7 @@ labelDate.textContent = new Intl.DateTimeFormat(currentAccount.locale, options).
   // clear input fields
   inputLoginUsername.value = inputLoginPin.value = '';
   inputLoginPin.blur();
-timer = startLogOutTimer();
+// timer = startLogOutTimer();
   
   // Display Choices
  updateUI(currentAccount);
